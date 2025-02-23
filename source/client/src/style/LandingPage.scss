@@ -1,0 +1,76 @@
+.landing-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #fff6e3; 
+}
+
+.landing-page__container {
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 90%;
+}
+
+.landing-page__header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 40%;
+}
+
+.landing-page__title {
+  font-weight: bold !important;
+  color: #3d5300;
+  font-size: 60px !important;
+}
+
+.landing-page__description {
+  color: #abba7c; 
+  font-size: 25px !important;
+  font-weight: bold;
+  margin-bottom: 48px !important;
+}
+
+.landing-page__buttons {
+  display: flex;
+  gap: 100px;
+  justify-content: center;
+  width: 100%;
+}
+
+.landing-page__button {
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 8px;
+  width: 25%;
+  height: 45px;
+  text-transform: none;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.landing-page__button--register {
+  background: #f09319 !important;
+  color: #ffffff !important;
+
+  &:hover {
+    background-color: #ffe31a !important;
+    transform: translateY(-2px) !important;
+  }
+}
+
+.landing-page__button--login {
+  background: #f09319 !important;
+  color: #ffffff !important;
+
+  &:hover {
+    background-color: #ffe31a !important;
+    transform: translateY(-2px) !important;
+  }
+}

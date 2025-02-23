@@ -1,0 +1,12 @@
+#root {
+  margin: 0;
+  padding: 2rem;
+  text-align: center;
+}
+.App {
+  margin-top: 200px;
+  margin: 0;
+}
+.MuiAppBar-root {
+  display: none;
+}
