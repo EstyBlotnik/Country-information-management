@@ -1,7 +1,13 @@
 import { Request, Response } from "express";
-import City from "../db/models/city";
-import { Types } from "mongoose";
-import Country from "../db/models/country";
+import {
+  createCityAtCountry,
+  deleteCityFromCountry,
+  deleteCityFromDb,
+  getCities,
+  getCityByItsId,
+  updateCityName,
+} from "../services/cityService";
+import { ERRORS_MESSAGES } from "../constants";
 
 export const createCity = async (
   req: Request,
@@ -10,42 +16,16 @@ export const createCity = async (
   const { name, countryId } = req.body;
   try {
     if (!name) {
-      res.status(400).json({ message: "Invalid name format" });
+      res.status(400).json({ message: ERRORS_MESSAGES.INVALD_NAME });
     } else {
-      console.log("at try 1");
-      const country = await Country.findById(countryId);
-      if (!country) {
-        res.status(404).json({ message: "Country is not found." });
-      } else {
-        console.log("at try 2");
-        const existingCity = await City.findOne({ name: name });
-        console.log("at try 3", existingCity);
-        if (existingCity) {
-          console.log("at try 4");
-          if (country.cities.includes(existingCity._id))
-            res.status(401).json({ message: "City already exists" });
-          else {
-            console.log("at try 3");
-            country.cities.push(existingCity._id);
-            await country.save();
-            res.status(201).json(existingCity);
-          }
-        } else {
-          const newCity = new City({
-            name,
-          });
-          await newCity.save();
-          country.cities.push(newCity._id);
-          await country.save();
-          res.status(201).json(newCity);
-        }
-      }
+      const newCity = await createCityAtCountry(name, countryId);
+      res.status(201).json(newCity);
     }
   } catch (err) {
     if (err instanceof Error) {
       res.status(402).json({ message: err.message });
     } else {
-      res.status(403).json({ message: "An unknown error occurred." });
+      res.status(403).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -57,22 +37,18 @@ export const deleteCity = async (
   const { id } = req.params;
   const { countryId } = req.query;
   try {
-    const deletedCity = await City.findByIdAndDelete(id);
+    const deletedCity = await deleteCityFromDb(id);
     if (!deletedCity) {
-      res.status(404).json({ message: "City not found." });
+      res.status(404).json({ message: ERRORS_MESSAGES.CITY.NOT_FOUND });
     } else {
-      const country = await Country.findByIdAndUpdate(
-        countryId,
-        { $pull: { cities: id } },
-        { new: true }
-      );
+      await deleteCityFromCountry(countryId?.toString() || "", id);
       res.status(204).json(deletedCity);
     }
   } catch (err) {
     if (err instanceof Error) {
       res.status(400).json({ message: err.message });
     } else {
-      res.status(400).json({ message: "An unknown error occurred." });
+      res.status(400).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -82,14 +58,13 @@ export const getAllCities = async (
   res: Response
 ): Promise<void> => {
   try {
-    const cities = await City.find();
+    const cities = await getCities();
     res.json(cities);
   } catch (err) {
-    console.log(err);
     if (err instanceof Error) {
       res.status(500).json({ message: err.message });
     } else {
-      res.status(500).json({ message: "An unknown error occurred." });
+      res.status(500).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -100,9 +75,9 @@ export const getCityById = async (
 ): Promise<void> => {
   const { id } = req.params;
   try {
-    const city = await City.findById(id);
+    const city = await getCityByItsId(id);
     if (!city) {
-      res.status(404).json({ message: "City not found" });
+      res.status(404).json({ message: ERRORS_MESSAGES.CITY.NOT_FOUND });
       return;
     }
     res.json(city);
@@ -110,7 +85,7 @@ export const getCityById = async (
     if (err instanceof Error) {
       res.status(500).json({ message: err.message });
     } else {
-      res.status(500).json({ message: "An unknown error occurred." });
+      res.status(500).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -121,11 +96,10 @@ export const updateCity = async (
 ): Promise<void> => {
   const { id } = req.params;
   const { name } = req.body;
-  console.log(name);
   try {
-    const updateCity = await City.findByIdAndUpdate(id, name);
+    const updateCity = await updateCityName(id, name);
     if (!updateCity) {
-      res.status(404).json({ message: "City not found" });
+      res.status(404).json({ message: ERRORS_MESSAGES.CITY.NOT_FOUND });
       return;
     }
     res.status(200).json(updateCity);
@@ -133,7 +107,7 @@ export const updateCity = async (
     if (err instanceof Error) {
       res.status(400).json({ message: err.message });
     } else {
-      res.status(400).json({ message: "An unknown error occurred." });
+      res.status(400).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };

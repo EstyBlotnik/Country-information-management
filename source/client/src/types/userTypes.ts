@@ -11,8 +11,7 @@ export type userData = {
   userName: string;
   password?: string;
   JoiningDate: Date;
-  closedRequests: RequestData[];
-  openRequest?: RequestData;
+  authorizationRequests: RequestData[];
 };
 
 export interface UserResponse {

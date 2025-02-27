@@ -1,8 +1,13 @@
 import { Request, Response } from "express";
-import Country from "../db/models/country";
-import City from "../db/models/city";
-import { Types } from "mongoose";
-
+import { ERRORS_MESSAGES } from "../constants";
+import {
+  createCountryService,
+  deleteCountryById,
+  getAllCountriesService,
+  getCountryByIdService,
+  getCountryByName,
+  updateCountryById,
+} from "../services/countryService";
 export const createCountry = async (
   req: Request,
   res: Response
@@ -10,18 +15,18 @@ export const createCountry = async (
   const { name, flag, population, region } = req.body;
   try {
     if (!name) {
-      res.status(400).json({ message: "Invalid name format" });
+      res.status(400).json({ message: ERRORS_MESSAGES.INVALD_NAME });
     } else {
-      const existingCountry = await Country.findOne({ name: name });
+      const existingCountry = await getCountryByName(name);
       if (existingCountry) {
-        res.status(401).json({ message: "Country already exists" });
+        res.status(401).json({ message: ERRORS_MESSAGES.COUNTRY.EXIST });
       } else {
-        const newCountry = new Country({
+        const newCountry = await createCountryService(
           name,
           flag,
           population,
           region,
-        });
+        );
         await newCountry.save();
         res.status(201).json(newCountry);
       }
@@ -30,7 +35,7 @@ export const createCountry = async (
     if (err instanceof Error) {
       res.status(402).json({ message: err.message });
     } else {
-      res.status(403).json({ message: "An unknown error occurred." });
+      res.status(403).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -41,9 +46,9 @@ export const deleteCountry = async (
 ): Promise<void> => {
   const { id } = req.params;
   try {
-    const deletedCountry = await Country.findByIdAndDelete(id);
+    const deletedCountry = await deleteCountryById(id);
     if (!deletedCountry) {
-      res.status(404).json({ message: "Country not found." });
+      res.status(404).json({ message: ERRORS_MESSAGES.COUNTRY.NOT_FOUND });
     } else {
       res.status(204).json(deletedCountry);
     }
@@ -51,7 +56,7 @@ export const deleteCountry = async (
     if (err instanceof Error) {
       res.status(400).json({ message: err.message });
     } else {
-      res.status(400).json({ message: "An unknown error occurred." });
+      res.status(400).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -62,37 +67,29 @@ export const updateCountry = async (
 ): Promise<void> => {
   const { id } = req.params;
   const { name, flag, population, region } = req.body;
-  console.log("reqBody: ", req.body);
 
   if (!name || !flag || !population || !region) {
-    res.status(400).json({ message: "Invalid data format" });
+    res.status(400).json({ message: ERRORS_MESSAGES.MISSING_DATA });
   } else {
     try {
-      const countryById = await Country.findById(id).populate("cities");
+      const countryById = await getCountryByIdService(id);
       if (!countryById) {
-        res.status(404).json({ message: "Country not found" });
+        res.status(404).json({ message: ERRORS_MESSAGES });
         return;
       }
-      console.log(countryById);
-      const existingCountry = await Country.findOne({ name });
-      console.log(existingCountry);
-
-      const cityIds: Types.ObjectId[] = [];
+      const existingCountry = await getCountryByName(name);
       if (
         existingCountry &&
         existingCountry._id.toString() !== countryById._id.toString()
       ) {
-        res.status(409).json({ message: "Country name already exists" });
+        res.status(409).json({ message: ERRORS_MESSAGES.COUNTRY.EXIST });
       } else {
-        const updatedCountry = await Country.findByIdAndUpdate(
+        const updatedCountry = await updateCountryById(
           id,
-          {
-            name,
-            flag,
-            population,
-            region,
-          },
-          { new: true }
+          name,
+          flag,
+          population,
+          region
         );
         res.status(200).json(updatedCountry);
       }
@@ -100,7 +97,7 @@ export const updateCountry = async (
       if (err instanceof Error) {
         res.status(400).json({ message: err.message });
       } else {
-        res.status(400).json({ message: "An unknown error occurred." });
+        res.status(400).json({ message: ERRORS_MESSAGES.UNKNOWN });
       }
     }
   }
@@ -111,18 +108,13 @@ export const getAllCountries = async (
   res: Response
 ): Promise<void> => {
   try {
-    const countries = await Country.find().populate({
-      path: "cities",
-      model: "City",
-      select: "name",
-    });
+    const countries = await getAllCountriesService();
     res.json(countries);
   } catch (err) {
-    console.log(err);
     if (err instanceof Error) {
       res.status(500).json({ message: err.message });
     } else {
-      res.status(500).json({ message: "An unknown error occurred." });
+      res.status(500).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -133,9 +125,9 @@ export const getCountryById = async (
 ): Promise<void> => {
   const { id } = req.params;
   try {
-    const country = await Country.findById(id);
+    const country = await getCountryByIdService(id);
     if (!country) {
-      res.status(404).json({ message: "Country not found" });
+      res.status(404).json({ message: ERRORS_MESSAGES.COUNTRY.NOT_FOUND });
       return;
     }
     res.json(country);
@@ -143,9 +135,7 @@ export const getCountryById = async (
     if (err instanceof Error) {
       res.status(500).json({ message: err.message });
     } else {
-      res.status(500).json({ message: "An unknown error occurred." });
+      res.status(500).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
-
-

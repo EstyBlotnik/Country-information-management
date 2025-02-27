@@ -9,20 +9,18 @@ import cookieParser from "cookie-parser";
 import adminMiddleware from "./middlewares/adminMiddlware";
 import path from "path";
 import mongoSanitize from "express-mongo-sanitize";
-import xssCleanMiddleware from "./middlewares/xss";
+// import xssCleanMiddleware from "./middlewares/xss";
 import cityRoute from "./routes/cityRoute";
+// import xssClean from "xss-clean";
+const xssClean = require("xss-clean");
+// import formData from 'express-form-data';
 
 dotenv.config();
-
 const app = express();
 app.use(mongoSanitize());
 app.use(cookieParser());
 app.use(express.json());
-
-app.use((req, res, next) => {
-  console.log("Raw request body:", req.body);
-  next();
-});
+// app.use(formData.parse());
 
 app.use(
   cors({
@@ -30,8 +28,14 @@ app.use(
     credentials: true,
   })
 );
-app.use(xssCleanMiddleware);
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// app.use(xssCleanMiddleware);
+app.use(xssClean());
+app.use((req, res, next) => {
+  console.log("Raw request body:", req.body);
+  next();
+});
+
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use("/countries", countryRoute);
 app.use("/cities", cityRoute);
 app.use("/user", userRoute);

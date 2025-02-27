@@ -186,7 +186,7 @@ export const useUser = () => {
         if (oldData) {
           return {
             ...oldData,
-            openRequest: data,
+            authorizationRequests: [...oldData.authorizationRequests,data],
           };
         }
       });

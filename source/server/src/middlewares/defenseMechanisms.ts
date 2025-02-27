@@ -1,3 +1,4 @@
+import { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit"; // Importing express-rate-limit to limit request rates
 import NodeCache from "node-cache"; // Importing NodeCache for caching login attempts
 
@@ -23,3 +24,17 @@ export const getLoginDelay = (attempts: number): number => {
   return Math.min(2 ** attempts * 1000, 30000);
 };
 
+export const LimitAttemptsByUsername = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { userName } = req.body;
+  const attempts = trackLoginAttempts(userName);
+  const delay = getLoginDelay(attempts);
+  if (attempts > 3) {
+    res.status(429).send(`Wait ${delay / 1000} seconds before trying again.`);
+    return;
+  }
+  next();
+};

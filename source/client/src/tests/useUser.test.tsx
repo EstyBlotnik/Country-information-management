@@ -32,7 +32,7 @@ const mockUser: userData = {
   role: "Admin",
   userName: "Estyb",
   JoiningDate: new Date("2025-02-09T12:26:43.637Z"),
-  closedRequests: [],
+  authorizationRequests: [],
 };
 
 const updatedUser: userData = {
@@ -44,7 +44,7 @@ const updatedUser: userData = {
   role: "Admin",
   userName: "janedoe",
   JoiningDate: new Date(),
-  closedRequests: [],
+  authorizationRequests: [],
 };
 
 describe("useUser Hook", () => {

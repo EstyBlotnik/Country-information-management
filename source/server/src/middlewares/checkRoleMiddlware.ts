@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
-import jwt from "jsonwebtoken";
 import { verifyToken } from "./adminMiddlware";
 
 dotenv.config();
@@ -22,9 +21,6 @@ export const addRole = (
       res.status(401).json({ message: "Access denied. No token provided." });
       return;
     } else {
-      const { id } = req.params;
-      console.log("id:", req.params);
-
       const decoded = verifyToken(token);
       req.user = decoded;
 
@@ -54,9 +50,6 @@ export const editRole = (
       res.status(401).json({ message: "Access denied. No token provided." });
       return;
     } else {
-      const { id } = req.params;
-      console.log("id:", req.params);
-
       // Verify the token and store the decoded payload in the request object
       const decoded = verifyToken(token);
       req.user = decoded;
@@ -85,9 +78,6 @@ export const deleteRole = (
       res.status(401).json({ message: "Access denied. No token provided." });
       return;
     } else {
-      const { id } = req.params;
-      console.log("id:", req.params);
-
       const decoded = verifyToken(token);
       req.user = decoded;
 

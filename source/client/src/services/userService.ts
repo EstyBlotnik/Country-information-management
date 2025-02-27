@@ -1,5 +1,5 @@
 import axios from "axios";
-import { userData, UserResponse, ErrorResponse } from "../types/userTypes";
+import { userData } from "../types/userTypes";
 import API_URL from "../config/apiConfig";
 import { RequestData } from "../types/authorizationRequest";
 
@@ -205,7 +205,7 @@ export const changeRoleReqest = async (userId: string, role: string) => {
         withCredentials: true,
       }
     );
-    console.log("respons from server", response)
+    console.log("respons from server", response);
     if (response.status === 200) {
       return {
         success: true,

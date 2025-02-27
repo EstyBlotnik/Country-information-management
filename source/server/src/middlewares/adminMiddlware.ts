@@ -29,16 +29,13 @@ export const adminMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  console.log("adminMiddleware");
   try {
     const token = req.cookies.token;
-    console.log("admin token:", token);
     if (!token) {
       res.status(401).json({ message: "Access denied. No token provided." });
       return;
     } else {
       const decoded = verifyToken(token);
-      console.log("decoded:", decoded);
       req.user = decoded;
 
       // Check if the decoded user role is 'Admin'
@@ -67,7 +64,6 @@ export const checkUserOrAdminAccess = (
       return;
     } else {
       const { id } = req.params;
-      console.log("id:", req.params);
 
       const decoded = verifyToken(token);
       req.user = decoded;

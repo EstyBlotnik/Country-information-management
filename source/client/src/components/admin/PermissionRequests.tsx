@@ -33,8 +33,7 @@ const PermissionRequests = () => {
         }
       } else {
         const userRequests = [
-          ...user.closedRequests,
-          ...(user.openRequest ? [user.openRequest] : []),
+          ...user.authorizationRequests
         ];
         if (filter === "All") {
           setFilterdPermissionRequests(userRequests);

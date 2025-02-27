@@ -1,18 +1,27 @@
 import { Request, Response } from "express";
-import User from "../db/models/user";
-import jwt from "jsonwebtoken";
-import AuthorizationRequest from "../db/models/authorizationRequest";
-import bcrypt from "bcryptjs";
+import {
+  deleteAUserByID,
+  getAllAuthorizationRequest,
+  getAllUsers,
+  getAuthorizationRequestById,
+} from "../services/adminService";
+import { verifyToken } from "../middlewares/adminMiddlware";
+import {
+  bcryptPassword,
+  createUser,
+  getUserById,
+  getUserByOrMailUserNamePassword,
+} from "../services/userService";
+import { ERRORS_MESSAGES, SUCCESS_MESSAGES } from "../constants";
 
 // Get all users
 export const allUsers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const users = await User.find();
-    console.log(users);
+    const users = await getAllUsers();
     res.status(200).json({ users });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -21,37 +30,30 @@ export const deleteUserById = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  console.log("deleteUserById");
   try {
     const { id } = req.params;
     const token = req.cookies.token;
-    console.log("admin token:", token);
     if (!token) {
-      res.status(401).json({ message: "Access denied. No token provided." });
+      res.status(401).json({ message: ERRORS_MESSAGES.ACCESS.NO_TOKEN });
       return;
     } else {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-        id: string;
-        role: string;
-      };
-      console.log("decoded:", decoded);
+      const decoded = verifyToken(token);
       if (decoded.id === id) {
         res.status(403).json({
-          message: "Access denied. You can't delete your own account.",
+          message: ERRORS_MESSAGES.ACCESS.FORBIDDEN_ADMIN,
         });
         return;
       }
     }
-    const deletedUser = await User.findByIdAndDelete(id);
-    console.log(id, deletedUser);
+    const deletedUser = await deleteAUserByID(id);
     if (!deletedUser) {
-      res.status(404).json({ message: "User not found." });
+      res.status(404).json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
     } else {
       res.status(204).json(deletedUser);
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -60,55 +62,47 @@ export const changeRoleResponse = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  console.log("changeRoleResponse");
   try {
     const { id } = req.params;
     const { approved } = req.body;
-    console.log("approved: ", approved);
-    console.log("id: ", id);
     if (!id) {
-      res.status(400).json({ message: "Missing reqest." });
+      res.status(400).json({ message: ERRORS_MESSAGES.REQEST.MISSING_REQUEST });
       return;
     }
-    const reqest = await AuthorizationRequest.findById(id);
-    console.log("reqest: ", reqest);
+    const reqest = await getAuthorizationRequestById(id);
     if (!reqest) {
-      res.status(404).json({ message: "Request not found." });
+      res.status(404).json({ message: ERRORS_MESSAGES.REQEST.NOT_FOUND });
       return;
     }
-    const user = await User.findById(reqest.userId);
+    const user = await getUserById(reqest.userId.toString());
     if (!user) {
-      res.status(404).json({ message: "User not found." });
+      res.status(404).json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
       return;
     }
     if (approved === "true") {
-      console.log("approved=true");
       user.role = reqest.requestedRole;
       reqest.status = "Approved";
     } else {
       reqest.status = "Denied";
     }
-    user.closedRequests.push(reqest._id);
-    user.openRequest = undefined;
     await user.save();
     reqest.responseDate = new Date();
     await reqest.save();
     res.status(200).json({ user, reqest });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
 // Get all authorization requests
 export const allReqs = async (req: Request, res: Response): Promise<void> => {
   try {
-    const reqests = await AuthorizationRequest.find();
-    console.log(reqests);
+    const reqests = await getAllAuthorizationRequest();
     res.status(200).json({ reqests });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -126,47 +120,41 @@ export const addUser = async (req: Request, res: Response): Promise<void> => {
       !userName ||
       !password
     ) {
-      res.status(400).json({ message: "Missing required fields" });
+      res.status(400).json({ message: ERRORS_MESSAGES.MISSING_DATA });
       return;
     }
-    const existingUser = await User.findOne({
-      $or: [{ email }, { userName }, { phoneNumber }],
-    });
+    const existingUser = await getUserByOrMailUserNamePassword(
+      email,
+      userName,
+      phoneNumber
+    );
 
     if (existingUser) {
-      res.status(400).json({ message: "User already exists" });
+      res.status(400).json({ message: ERRORS_MESSAGES.USER.DUPLICATE_USER });
       return;
     }
-    const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif"];
-    if (req.file && !allowedMimeTypes.includes(req.file.mimetype)) {
-      res.status(400).json({ message: "Invalid image format" });
-      return;
-    }
-    const profilePicture = req.file ? `/uploads/${req.file.filename}` : "";
-    console.log(profilePicture);
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({
+    const profilePicture = req.file ? `/uploads/${req.file.filename}` : "";
+
+    const hashedPassword = await bcryptPassword(password);
+
+    const newUser = await createUser(
       firstName,
       lastName,
       email,
       phoneNumber,
       profilePicture,
-      role: "View",
       userName,
-      password: hashedPassword,
-      JoiningDate: new Date(),
-    });
+      hashedPassword
+    );
 
-    await newUser.save();
     const { password: _, ...userWithoutPassword } = newUser.toObject();
     res.json({
-      message: "User registered successfully",
+      message: SUCCESS_MESSAGES.USER.CREATE_SUCCESS,
       newUser: userWithoutPassword,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
-}
+};

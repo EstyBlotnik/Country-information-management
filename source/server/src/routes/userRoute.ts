@@ -9,18 +9,34 @@ import {
 import dotenv from "dotenv";
 import passwordResetRoute from "./passwordRoute";
 import { checkUserOrAdminAccess } from "../middlewares/adminMiddlware";
-import upload from "../middlewares/upload"
-import { loginLimiter } from "../middlewares/defenseMechanisms";
+import upload from "../middlewares/upload";
+import {
+  LimitAttemptsByUsername,
+  loginLimiter,
+} from "../middlewares/defenseMechanisms";
+import xssCleanMiddleware from "../middlewares/xss";
+const xssClean = require("xss-clean");
 
 dotenv.config();
 
 const router = express.Router();
 
-router.post("/register", upload.single("profilePicture"), register);
-router.post("/login", loginLimiter, login);
+router.post(
+  "/register",
+  upload.single("profilePicture"),
+  // xssClean,
+  register
+);
+router.post("/login", loginLimiter, LimitAttemptsByUsername, login);
 router.use("/password", passwordResetRoute);
 router.get("/:id", checkUserOrAdminAccess, getUser);
-router.put("/:id", checkUserOrAdminAccess, upload.single("profilePicture"), editUser);
+router.put(
+  "/:id",
+  checkUserOrAdminAccess,
+  upload.single("profilePicture"),
+  // xssClean,
+  editUser
+);
 router.put("/changeRole/:id", changeRoleRequest);
 
 export default router;
