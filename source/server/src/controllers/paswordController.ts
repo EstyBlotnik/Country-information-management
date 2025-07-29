@@ -6,11 +6,14 @@ import {
   getresetTokenByToken,
   sendEmail,
 } from "../services/passwordService";
+import { getUserByEmail, getUserById } from "../services/userService";
 import {
-  bcryptPassword,
-  getUserByEmail,
-  getUserById,
-} from "../services/userService";
+  STATUS_CODES,
+  ERRORS_MESSAGES,
+  RESET_PASSWORD,
+  SUCCESS_MESSAGES,
+} from "../constants";
+import { bcryptPassword } from "../utils/userUtils";
 
 dotenv.config();
 
@@ -21,12 +24,12 @@ export const requestPasswordReset = async (
   try {
     const { email } = req.body;
     if (!email) {
-      res.status(400).json({ message: "Email is required" });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.EMAIL_REQUIRED });
       return;
     }
     const user = await getUserByEmail(email);
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      res.status(STATUS_CODES.NOT_FOUND).json({ message: ERRORS_MESSAGES.USER.NOT_ADMIN });
       return;
     }
 
@@ -34,13 +37,16 @@ export const requestPasswordReset = async (
     const resetUrl = `http://localhost:5173/passwordreset/${resetToken.token}`;
     sendEmail(
       email,
-      "RESET PASS",
+      RESET_PASSWORD.EMAIL_TITLE,
       `Click here to reset your password: ${resetUrl}`
     );
-    res.status(200).json({ message: "Reset password link sent to email" });
+    res
+      .status(STATUS_CODES.SUCCESS)
+      .json({ message: SUCCESS_MESSAGES.RESET_PASSWORD.EMAIL_SENT });
   } catch (error) {
-    console.error("Error requesting password reset:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -52,26 +58,29 @@ export const resetPassword = async (
     const { token } = req.params;
     const { newPassword } = req.body;
     if (!token || !newPassword) {
-      res.status(400).json({ message: "Token and new password are required" });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.MISSING_DATA });
       return;
     }
     const resetToken = await getresetTokenByToken(token);
     if (!resetToken || resetToken.expiresAt < new Date()) {
-      res.status(403).json({ message: "Token not found or expired" });
+      res.status(STATUS_CODES.FORBIDDEN).json({ message: ERRORS_MESSAGES.PASSWORD.NO_TOKEN });
       return;
     }
     const user = await getUserById(resetToken.userId);
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      res.status(STATUS_CODES.NOT_FOUND).json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
       return;
     }
     const hashedPassword = await bcryptPassword(newPassword);
     user.password = hashedPassword;
     await user.save();
     await deleteResetToken(token);
-    res.status(200).json({ message: "Password reset successful" });
+    res
+      .status(STATUS_CODES.SUCCESS)
+      .json({ message: SUCCESS_MESSAGES.RESET_PASSWORD.PASSWORT_RESET });
   } catch (error) {
-    console.error("Error resetting password:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };

@@ -1,8 +1,7 @@
-import User from "../db/models/user";
 import ResetToken from "../db/models/resetToken";
-import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import { ERRORS_MESSAGES } from "../constants";
 
 export const sendEmail = async (
   to: string,
@@ -26,7 +25,13 @@ export const sendEmail = async (
     };
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error("Error sending email:", error);
+    if (error instanceof Error) {
+      throw new Error(
+        `${ERRORS_MESSAGES.PASSWORD.SENDING_EMAIL}: ${error.message}`
+      );
+    } else {
+      throw new Error(ERRORS_MESSAGES.PASSWORD.SENDING_EMAIL);
+    }
   }
 };
 
@@ -42,15 +47,19 @@ export const createResetToken = async (userId: string) => {
     await resetToken.save();
     return resetToken;
   } catch {
-    throw new Error("Error creating reset token");
+    throw new Error(ERRORS_MESSAGES.PASSWORD.CREAT_TOKEN);
   }
 };
+
 export const getresetTokenByToken = async (token: string) => {
   try {
     const resetToken = await ResetToken.findOne({ token });
     return resetToken;
   } catch (error) {
-    throw new Error("Error fetching reset token");
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error(ERRORS_MESSAGES.PASSWORD.FETCH_TOKEN);
   }
 };
 
@@ -58,6 +67,9 @@ export const deleteResetToken = async (token: string) => {
   try {
     return await ResetToken.deleteOne({ token });
   } catch (error) {
-    throw new Error("Error deleting reset token");
+    if (error instanceof Error) {
+      throw new Error(error.message);
+    }
+    throw new Error(ERRORS_MESSAGES.PASSWORD.DELETE_TOKEN);
   }
 };

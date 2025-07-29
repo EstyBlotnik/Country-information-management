@@ -7,21 +7,27 @@ import {
 } from "../services/adminService";
 import { verifyToken } from "../middlewares/adminMiddlware";
 import {
-  bcryptPassword,
   createUser,
   getUserById,
   getUserByOrMailUserNamePassword,
 } from "../services/userService";
-import { ERRORS_MESSAGES, SUCCESS_MESSAGES } from "../constants";
+import {
+  ERRORS_MESSAGES,
+  SUCCESS_MESSAGES,
+  STATUS_CODES,
+} from "../constants";
+import { bcryptPassword } from "../utils/userUtils";
 
 // Get all users
 export const allUsers = async (req: Request, res: Response): Promise<void> => {
   try {
     const users = await getAllUsers();
-    res.status(200).json({ users });
+    res.status(STATUS_CODES.SUCCESS).json({ users });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -34,12 +40,14 @@ export const deleteUserById = async (
     const { id } = req.params;
     const token = req.cookies.token;
     if (!token) {
-      res.status(401).json({ message: ERRORS_MESSAGES.ACCESS.NO_TOKEN });
+      res
+        .status(STATUS_CODES.UNAUTHORIZED)
+        .json({ message: ERRORS_MESSAGES.ACCESS.NO_TOKEN });
       return;
     } else {
       const decoded = verifyToken(token);
       if (decoded.id === id) {
-        res.status(403).json({
+        res.status(STATUS_CODES.FORBIDDEN).json({
           message: ERRORS_MESSAGES.ACCESS.FORBIDDEN_ADMIN,
         });
         return;
@@ -47,13 +55,15 @@ export const deleteUserById = async (
     }
     const deletedUser = await deleteAUserByID(id);
     if (!deletedUser) {
-      res.status(404).json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
+      res.status(STATUS_CODES.NOT_FOUND).json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
     } else {
-      res.status(204).json(deletedUser);
+      res.status(STATUS_CODES.CREATED).json(deletedUser);
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -66,17 +76,17 @@ export const changeRoleResponse = async (
     const { id } = req.params;
     const { approved } = req.body;
     if (!id) {
-      res.status(400).json({ message: ERRORS_MESSAGES.REQEST.MISSING_REQUEST });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.REQEST.MISSING_REQUEST });
       return;
     }
     const reqest = await getAuthorizationRequestById(id);
     if (!reqest) {
-      res.status(404).json({ message: ERRORS_MESSAGES.REQEST.NOT_FOUND });
+      res.status(STATUS_CODES.NOT_FOUND).json({ message: ERRORS_MESSAGES.REQEST.NOT_FOUND });
       return;
     }
     const user = await getUserById(reqest.userId.toString());
     if (!user) {
-      res.status(404).json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
+      res.status(STATUS_CODES.NOT_FOUND).json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
       return;
     }
     if (approved === "true") {
@@ -88,10 +98,12 @@ export const changeRoleResponse = async (
     await user.save();
     reqest.responseDate = new Date();
     await reqest.save();
-    res.status(200).json({ user, reqest });
+    res.status(STATUS_CODES.SUCCESS).json({ user, reqest });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -99,10 +111,12 @@ export const changeRoleResponse = async (
 export const allReqs = async (req: Request, res: Response): Promise<void> => {
   try {
     const reqests = await getAllAuthorizationRequest();
-    res.status(200).json({ reqests });
+    res.status(STATUS_CODES.SUCCESS).json({ reqests });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -120,7 +134,7 @@ export const addUser = async (req: Request, res: Response): Promise<void> => {
       !userName ||
       !password
     ) {
-      res.status(400).json({ message: ERRORS_MESSAGES.MISSING_DATA });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.MISSING_DATA });
       return;
     }
     const existingUser = await getUserByOrMailUserNamePassword(
@@ -130,7 +144,7 @@ export const addUser = async (req: Request, res: Response): Promise<void> => {
     );
 
     if (existingUser) {
-      res.status(400).json({ message: ERRORS_MESSAGES.USER.DUPLICATE_USER });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.USER.DUPLICATE_USER });
       return;
     }
 
@@ -155,6 +169,8 @@ export const addUser = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: ERRORS_MESSAGES.SERVER_ERROR });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };

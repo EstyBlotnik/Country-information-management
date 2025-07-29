@@ -1,6 +1,5 @@
-import React from "react";
 import { TextField, Button, Box } from "@mui/material";
-import { Navigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import "../../style/signupForm.scss";

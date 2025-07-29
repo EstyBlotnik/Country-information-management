@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import { verifyToken } from "./adminMiddlware";
+import { STATUS_CODES, ERRORS_MESSAGES } from "../constants";
 
 dotenv.config();
 
@@ -18,7 +19,9 @@ export const addRole = (
   try {
     const token = req.cookies.token;
     if (!token) {
-      res.status(401).json({ message: "Access denied. No token provided." });
+      res
+        .status(STATUS_CODES.UNAUTHORIZED)
+        .json({ message: ERRORS_MESSAGES.ACCESS.NO_TOKEN });
       return;
     } else {
       const decoded = verifyToken(token);
@@ -26,12 +29,12 @@ export const addRole = (
 
       // Check if the user's role is allowed to add resources (Admin, Add, Edit, Delete)
       if (!["Admin", "Add", "Edit", "Delete"].includes(req.user.role)) {
-        res.status(403).json({ message: "Access denied. Add only." });
+        res.status(STATUS_CODES.FORBIDDEN).json({ message: ERRORS_MESSAGES.ACCESS.ADD_ONLY });
         return;
       }
     }
   } catch (error) {
-    res.status(400).json({ message: "Invalid token." });
+    res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.ACCESS.INVALID_TOKEN });
     return;
   }
   next();
@@ -47,7 +50,9 @@ export const editRole = (
     // Retrieve the token from cookies
     const token = req.cookies.token;
     if (!token) {
-      res.status(401).json({ message: "Access denied. No token provided." });
+      res
+        .status(STATUS_CODES.UNAUTHORIZED)
+        .json({ message: ERRORS_MESSAGES.ACCESS.NO_TOKEN });
       return;
     } else {
       // Verify the token and store the decoded payload in the request object
@@ -55,12 +60,12 @@ export const editRole = (
       req.user = decoded;
       // Check if the user's role is allowed to edit resources (Admin, Edit, Delete)
       if (!["Admin", "Edit", "Delete"].includes(req.user.role)) {
-        res.status(403).json({ message: "Access denied. Edit only." });
+        res.status(STATUS_CODES.FORBIDDEN).json({ message: ERRORS_MESSAGES.ACCESS.EDIT_ONLY });
         return;
       }
     }
   } catch (error) {
-    res.status(400).json({ message: "Invalid token." });
+    res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.ACCESS.INVALID_TOKEN });
     return;
   }
   next();
@@ -75,7 +80,9 @@ export const deleteRole = (
   try {
     const token = req.cookies.token;
     if (!token) {
-      res.status(401).json({ message: "Access denied. No token provided." });
+      res
+        .status(STATUS_CODES.UNAUTHORIZED)
+        .json({ message: ERRORS_MESSAGES.ACCESS.NO_TOKEN });
       return;
     } else {
       const decoded = verifyToken(token);
@@ -83,12 +90,12 @@ export const deleteRole = (
 
       // Check if the user's role is allowed to delete resources (Admin, Delete)
       if (!["Admin", "Delete"].includes(req.user.role)) {
-        res.status(403).json({ message: "Access denied. Delete only." });
+        res.status(STATUS_CODES.FORBIDDEN).json({ message: ERRORS_MESSAGES.ACCESS.DELETE_ONLY });
         return;
       }
     }
   } catch (error) {
-    res.status(400).json({ message: "Invalid token." });
+    res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.ACCESS.INVALID_TOKEN });
     return;
   }
   next();

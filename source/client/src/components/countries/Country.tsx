@@ -1,4 +1,3 @@
-import { FaSpinner } from "react-icons/fa";
 import { DataGrid, GridColDef, GridRowsProp } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";

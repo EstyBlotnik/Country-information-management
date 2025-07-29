@@ -2,15 +2,15 @@ import { Request, Response } from "express";
 import dotenv from "dotenv";
 
 import {
-  bcryptPassword,
   createAuthorizationRequest,
-  createToken,
   createUser,
   getUserById,
   getUserByOrMailUserNamePassword,
   getUserByUserName,
   matchPassword,
 } from "../services/userService";
+import { STATUS_CODES, ERRORS_MESSAGES, SUCCESS_MESSAGES } from "../constants";
+import { bcryptPassword, createToken } from "../utils/userUtils";
 
 dotenv.config();
 
@@ -19,13 +19,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const { userName, password } = req.body;
     const user = await getUserByUserName(userName);
     if (!user) {
-      res.status(401).json({ message: "Invalid userName or password" });
+      res
+        .status(STATUS_CODES.UNAUTHORIZED)
+        .json({ message: ERRORS_MESSAGES.USER.INVALID_DATA_LOGIN });
       return;
     }
 
     const isMatch = await matchPassword(password, user.password);
     if (!isMatch) {
-      res.status(401).json({ message: "Invalid userName or password" });
+      res
+        .status(STATUS_CODES.UNAUTHORIZED)
+        .json({ message: ERRORS_MESSAGES.USER.INVALID_DATA_LOGIN });
       return;
     }
 
@@ -36,14 +40,17 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       secure: process.env.NODE_ENV === "production",
       maxAge: 21600000,
     });
+
     const { password: _, ...userWithoutPassword } = user.toObject();
     res.json({
-      message: "User login successfully",
+      message: SUCCESS_MESSAGES.USER.USER_LOGDIN,
       user: userWithoutPassword,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -59,7 +66,9 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       !userName ||
       !password
     ) {
-      res.status(400).json({ message: "Missing required fields" });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: ERRORS_MESSAGES.MISSING_DATA });
       return;
     }
 
@@ -70,14 +79,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     );
 
     if (existingUser) {
-      res.status(400).json({ message: "User already exists" });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: ERRORS_MESSAGES.USER.DUPLICATE_USER });
       return;
     }
-    // const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif"];
-    // if (req.file && !allowedMimeTypes.includes(req.file.mimetype)) {
-    //   res.status(400).json({ message: "Invalid image format" });
-    //   return;
-    // }
     const profilePicture = req.file ? `/uploads/${req.file.filename}` : "";
     const hashedPassword = await bcryptPassword(password);
 
@@ -95,19 +101,21 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 21600000,
+      maxAge: 21600000, //1000*60*60*6 6hours
     });
 
     const { password: _, ...userWithoutPassword } = newUser.toObject();
 
     res.json({
-      message: "User registered successfully",
+      message: SUCCESS_MESSAGES.USER.REGISTERD,
       token,
       newUser: userWithoutPassword,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -116,14 +124,18 @@ export const getUser = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const user = await getUserById(id);
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
       return;
     }
     const { password: _, ...userWithoutPassword } = user.toObject();
     res.json({ user: userWithoutPassword });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -133,7 +145,9 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     const { firstName, lastName, email, phoneNumber, userName } = req.body;
 
     if (!firstName || !lastName || !email || !phoneNumber || !userName) {
-      res.status(400).json({ message: "No updates provided" });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: ERRORS_MESSAGES.NO_UPDATES_PROVIDED });
       return;
     }
     const existingUser = await getUserByOrMailUserNamePassword(
@@ -143,9 +157,8 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     );
 
     if (existingUser && existingUser._id.toString() !== id) {
-      res.status(400).json({
-        message:
-          "User with this email, username, or phone number already exists.",
+      res.status(STATUS_CODES.BAD_REQUEST).json({
+        message: ERRORS_MESSAGES.USER.DUPLICATE_USER,
       });
       return;
     }
@@ -153,7 +166,9 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     const user = await getUserById(id);
 
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
       return;
     }
 
@@ -163,11 +178,6 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     user.phoneNumber = phoneNumber || user.phoneNumber;
     user.userName = userName || user.userName;
 
-    // const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif"];
-    // if (req.file && !allowedMimeTypes.includes(req.file.mimetype)) {
-    //   res.status(400).json({ message: "Invalid image format" });
-    //   return;
-    // }
     if (req.file) {
       user.profilePicture = `/uploads/${req.file.filename}`;
     }
@@ -177,7 +187,9 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
     res.json(user);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -190,11 +202,15 @@ export const changeRoleRequest = async (
     const { newRole } = req.body;
     const user = await getUserById(id);
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: ERRORS_MESSAGES.USER.NOT_FOUND });
       return;
     }
     if (user.role === newRole) {
-      res.status(400).json({ message: "User already has this role" });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: ERRORS_MESSAGES.USER.ROLE_EXISTING });
       return;
     }
     const request = await createAuthorizationRequest(id, newRole);
@@ -203,6 +219,8 @@ export const changeRoleRequest = async (
     res.json(request);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Server error" });
+    res
+      .status(STATUS_CODES.SERVER_ERROR)
+      .json({ message: ERRORS_MESSAGES.SERVER_ERROR });
   }
 };

@@ -7,7 +7,7 @@ import {
   getCityByItsId,
   updateCityName,
 } from "../services/cityService";
-import { ERRORS_MESSAGES } from "../constants";
+import { STATUS_CODES, ERRORS_MESSAGES } from "../constants";
 
 export const createCity = async (
   req: Request,
@@ -16,16 +16,16 @@ export const createCity = async (
   const { name, countryId } = req.body;
   try {
     if (!name) {
-      res.status(400).json({ message: ERRORS_MESSAGES.INVALD_NAME });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.INVALD_NAME });
     } else {
       const newCity = await createCityAtCountry(name, countryId);
-      res.status(201).json(newCity);
+      res.status(STATUS_CODES.CREATED).json(newCity);
     }
   } catch (err) {
     if (err instanceof Error) {
-      res.status(402).json({ message: err.message });
+      res.status(STATUS_CODES.UNAUTHORIZED).json({ message: err.message });
     } else {
-      res.status(403).json({ message: ERRORS_MESSAGES.UNKNOWN });
+      res.status(STATUS_CODES.FORBIDDEN).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -39,16 +39,16 @@ export const deleteCity = async (
   try {
     const deletedCity = await deleteCityFromDb(id);
     if (!deletedCity) {
-      res.status(404).json({ message: ERRORS_MESSAGES.CITY.NOT_FOUND });
+      res.status(STATUS_CODES.NOT_FOUND).json({ message: ERRORS_MESSAGES.CITY.NOT_FOUND });
     } else {
       await deleteCityFromCountry(countryId?.toString() || "", id);
       res.status(204).json(deletedCity);
     }
   } catch (err) {
     if (err instanceof Error) {
-      res.status(400).json({ message: err.message });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: err.message });
     } else {
-      res.status(400).json({ message: ERRORS_MESSAGES.UNKNOWN });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -62,9 +62,13 @@ export const getAllCities = async (
     res.json(cities);
   } catch (err) {
     if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
+      res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: err.message });
     } else {
-      res.status(500).json({ message: ERRORS_MESSAGES.UNKNOWN });
+      res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -77,15 +81,19 @@ export const getCityById = async (
   try {
     const city = await getCityByItsId(id);
     if (!city) {
-      res.status(404).json({ message: ERRORS_MESSAGES.CITY.NOT_FOUND });
+      res.status(STATUS_CODES.NOT_FOUND).json({ message: ERRORS_MESSAGES.CITY.NOT_FOUND });
       return;
     }
     res.json(city);
   } catch (err) {
     if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
+      res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: err.message });
     } else {
-      res.status(500).json({ message: ERRORS_MESSAGES.UNKNOWN });
+      res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -99,15 +107,15 @@ export const updateCity = async (
   try {
     const updateCity = await updateCityName(id, name);
     if (!updateCity) {
-      res.status(404).json({ message: ERRORS_MESSAGES.CITY.NOT_FOUND });
+      res.status(STATUS_CODES.NOT_FOUND).json({ message: ERRORS_MESSAGES.CITY.NOT_FOUND });
       return;
     }
-    res.status(200).json(updateCity);
+    res.status(STATUS_CODES.SUCCESS).json(updateCity);
   } catch (err) {
     if (err instanceof Error) {
-      res.status(400).json({ message: err.message });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: err.message });
     } else {
-      res.status(400).json({ message: ERRORS_MESSAGES.UNKNOWN });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };

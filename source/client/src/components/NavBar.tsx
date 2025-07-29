@@ -41,7 +41,6 @@ export default function NavBar() {
   const navigate = useNavigate();
 
   const handleMenuItemClick = (setting: string) => {
-    console.log("Navigating to:", setting);
     if (setting === "Logout") {
       setDialogOpen(true);
     } else {
@@ -51,7 +50,6 @@ export default function NavBar() {
   };
 
   const handlePageClick = (page: string) => {
-    console.log("Navigating to:", page);
     navigate(`/${page.toLowerCase()}`);
     handleCloseNavMenu();
   };

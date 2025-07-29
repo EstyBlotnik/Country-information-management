@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ERRORS_MESSAGES } from "../constants";
+import { STATUS_CODES, ERRORS_MESSAGES } from "../constants";
 import {
   createCountryService,
   deleteCountryById,
@@ -15,27 +15,40 @@ export const createCountry = async (
   const { name, flag, population, region } = req.body;
   try {
     if (!name) {
-      res.status(400).json({ message: ERRORS_MESSAGES.INVALD_NAME });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: ERRORS_MESSAGES.INVALD_NAME });
     } else {
+      if (!flag || !population || !region) {
+        res
+          .status(STATUS_CODES.BAD_REQUEST)
+          .json({ message: ERRORS_MESSAGES.MISSING_DATA });
+        return;
+      }
       const existingCountry = await getCountryByName(name);
       if (existingCountry) {
-        res.status(401).json({ message: ERRORS_MESSAGES.COUNTRY.EXIST });
+        res
+          .status(STATUS_CODES.UNAUTHORIZED)
+          .json({ message: ERRORS_MESSAGES.COUNTRY.EXIST });
       } else {
         const newCountry = await createCountryService(
           name,
           flag,
           population,
-          region,
+          region
         );
         await newCountry.save();
-        res.status(201).json(newCountry);
+        res.status(STATUS_CODES.CREATED).json(newCountry);
       }
     }
   } catch (err) {
     if (err instanceof Error) {
-      res.status(402).json({ message: err.message });
+      console.log("error add country: ", err);
+      res.status(STATUS_CODES.UNAUTHORIZED).json({ message: err.message });
     } else {
-      res.status(403).json({ message: ERRORS_MESSAGES.UNKNOWN });
+      res
+        .status(STATUS_CODES.FORBIDDEN)
+        .json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -48,15 +61,19 @@ export const deleteCountry = async (
   try {
     const deletedCountry = await deleteCountryById(id);
     if (!deletedCountry) {
-      res.status(404).json({ message: ERRORS_MESSAGES.COUNTRY.NOT_FOUND });
+      res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: ERRORS_MESSAGES.COUNTRY.NOT_FOUND });
     } else {
       res.status(204).json(deletedCountry);
     }
   } catch (err) {
     if (err instanceof Error) {
-      res.status(400).json({ message: err.message });
+      res.status(STATUS_CODES.BAD_REQUEST).json({ message: err.message });
     } else {
-      res.status(400).json({ message: ERRORS_MESSAGES.UNKNOWN });
+      res
+        .status(STATUS_CODES.BAD_REQUEST)
+        .json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -67,14 +84,15 @@ export const updateCountry = async (
 ): Promise<void> => {
   const { id } = req.params;
   const { name, flag, population, region } = req.body;
-
   if (!name || !flag || !population || !region) {
-    res.status(400).json({ message: ERRORS_MESSAGES.MISSING_DATA });
+    res
+      .status(STATUS_CODES.BAD_REQUEST)
+      .json({ message: ERRORS_MESSAGES.MISSING_DATA });
   } else {
     try {
       const countryById = await getCountryByIdService(id);
       if (!countryById) {
-        res.status(404).json({ message: ERRORS_MESSAGES });
+        res.status(STATUS_CODES.NOT_FOUND).json({ message: ERRORS_MESSAGES });
         return;
       }
       const existingCountry = await getCountryByName(name);
@@ -82,7 +100,9 @@ export const updateCountry = async (
         existingCountry &&
         existingCountry._id.toString() !== countryById._id.toString()
       ) {
-        res.status(409).json({ message: ERRORS_MESSAGES.COUNTRY.EXIST });
+        res
+          .status(STATUS_CODES.CONFLICT)
+          .json({ message: ERRORS_MESSAGES.COUNTRY.EXIST });
       } else {
         const updatedCountry = await updateCountryById(
           id,
@@ -91,13 +111,15 @@ export const updateCountry = async (
           population,
           region
         );
-        res.status(200).json(updatedCountry);
+        res.status(STATUS_CODES.SUCCESS).json(updatedCountry);
       }
     } catch (err) {
       if (err instanceof Error) {
-        res.status(400).json({ message: err.message });
+        res.status(STATUS_CODES.BAD_REQUEST).json({ message: err.message });
       } else {
-        res.status(400).json({ message: ERRORS_MESSAGES.UNKNOWN });
+        res
+          .status(STATUS_CODES.BAD_REQUEST)
+          .json({ message: ERRORS_MESSAGES.UNKNOWN });
       }
     }
   }
@@ -112,9 +134,11 @@ export const getAllCountries = async (
     res.json(countries);
   } catch (err) {
     if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
+      res.status(STATUS_CODES.SERVER_ERROR).json({ message: err.message });
     } else {
-      res.status(500).json({ message: ERRORS_MESSAGES.UNKNOWN });
+      res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };
@@ -127,15 +151,19 @@ export const getCountryById = async (
   try {
     const country = await getCountryByIdService(id);
     if (!country) {
-      res.status(404).json({ message: ERRORS_MESSAGES.COUNTRY.NOT_FOUND });
+      res
+        .status(STATUS_CODES.NOT_FOUND)
+        .json({ message: ERRORS_MESSAGES.COUNTRY.NOT_FOUND });
       return;
     }
     res.json(country);
   } catch (err) {
     if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
+      res.status(STATUS_CODES.SERVER_ERROR).json({ message: err.message });
     } else {
-      res.status(500).json({ message: ERRORS_MESSAGES.UNKNOWN });
+      res
+        .status(STATUS_CODES.SERVER_ERROR)
+        .json({ message: ERRORS_MESSAGES.UNKNOWN });
     }
   }
 };

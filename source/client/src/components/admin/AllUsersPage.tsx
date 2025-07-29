@@ -1,6 +1,5 @@
 import { DataGrid, GridColDef, GridRowsProp } from "@mui/x-data-grid";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useState } from "react";
 import "../../style/Country.scss";
 import { useMemo } from "react";
 import VerificationDialog from "../countries/VerificationDialogue";
@@ -11,20 +10,13 @@ import API_URL from "../../config/apiConfig";
 import { useSetRecoilState } from "recoil";
 import { isEditingState, selctedUserState } from "../../states/user";
 import LoadingPage from "../LoadingPage";
+import { USER } from "../../constats";
 export const AllUsersPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const { users, isLoading, error, deleteMutation, getUserById } = useUsers();
   const setSelectedUser = useSetRecoilState(selctedUserState);
   const setIsEditingState = useSetRecoilState(isEditingState);
-  // useEffect(() => {
-  //   if (deleteMutation && deleteMutation.isSuccess) {
-  //     toast.success("User deleted successfully");
-  //   }
-  //   if (deleteMutation && deleteMutation.isError) {
-  //     toast.error("Error deleting the user");
-  //   }
-  // }, [deleteMutation.isSuccess, deleteMutation.isError]);
 
   const rows: GridRowsProp = useMemo(
     () =>
@@ -42,12 +34,12 @@ export const AllUsersPage = () => {
   const columns: GridColDef[] = useMemo(
     () => [
       {
-        field: "profilePicture",
+        field: USER.PROFILE_PICTURE,
         headerName: "Profile Picture",
         width: 150,
         renderCell: (params) => (
           <Avatar
-            src={`${API_URL}${params.value}` || "/default-avatar.png"}
+            src={`${API_URL}${params.value}` || USER.DEFAULT_PICTURE}
             alt="user profle"
             sx={{ width: 50, height: 50, mb: 2 }}
           />
@@ -85,10 +77,8 @@ export const AllUsersPage = () => {
 
   // Sets user data for editing
   const handleEdit = (selectedUser: userData) => {
-    console.log(selectedUser);
     const fullSelectedUser = getUserById(selectedUser?._id || "");
     setSelectedUser(fullSelectedUser || selectedUser);
-    console.log("selected user set to state", selectedUser);
     setIsEditingState(true);
   };
 
@@ -100,14 +90,8 @@ export const AllUsersPage = () => {
 
   //Deletes user after confirmation
   const handleDelete = (id: string) => {
-    console.log("Deleting user with id:", id);
     setDeleteDialogOpen(false);
     deleteMutation.mutate(id);
-  };
-
-  // Cancels the delete confirmation dialog
-  const handleCancel = () => {
-    console.log("delete user was canceld");
   };
 
   if (isLoading) return <LoadingPage />;
@@ -133,7 +117,6 @@ export const AllUsersPage = () => {
         dialogFor="delete"
         open={deleteDialogOpen}
         onClose={() => {
-          handleCancel();
           setDeleteDialogOpen(false);
         }}
         onDelete={() => {

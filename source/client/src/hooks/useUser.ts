@@ -120,7 +120,9 @@ export const useUser = () => {
       document.cookie =
         "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       localStorage.removeItem("userId");
-      queryClient.removeQueries({ queryKey: ["user"] });
+      ["user", "users", "permissionRequests"].forEach((key) =>
+        queryClient.removeQueries({ queryKey: [key] })
+      );
       toast.success("User logged out successfully");
       console.log("Cache cleared after user logout");
       navigate("/");
@@ -186,7 +188,7 @@ export const useUser = () => {
         if (oldData) {
           return {
             ...oldData,
-            authorizationRequests: [...oldData.authorizationRequests,data],
+            authorizationRequests: [...oldData.authorizationRequests, data],
           };
         }
       });

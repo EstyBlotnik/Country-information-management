@@ -1,15 +1,8 @@
 import bcrypt from "bcryptjs";
 import User from "../db/models/user";
 import AuthorizationRequest from "../db/models/authorizationRequest";
-import jwt from "jsonwebtoken";
-import { IUser } from "../db/types/user";
 import { Types } from "mongoose";
-
-export const bcryptPassword = async (password: string) => {
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-  return hashedPassword;
-};
+import { ERRORS_MESSAGES } from "../constants";
 
 export const createUser = async (
   firstName: string,
@@ -35,20 +28,7 @@ export const createUser = async (
     await newUser.save();
     return newUser;
   } catch (err) {
-    throw new Error(err ? err.toString() : "Could not create user");
-  }
-};
-
-export const createToken = async (user: IUser) => {
-  try {
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "6h" }
-    );
-    return token;
-  } catch (err) {
-    throw new Error(err ? err.toString() : "Could not create token");
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.USER.CREATE_USER);
   }
 };
 
@@ -59,7 +39,9 @@ export const getUserByUserName = async (userName: string) => {
     );
     return user;
   } catch (err) {
-    throw new Error(err ? err.toString() : "Could not find user by username");
+    throw new Error(
+      err ? err.toString() : ERRORS_MESSAGES.USER.FIND_BY_USERNAME
+    );
   }
 };
 
@@ -67,7 +49,7 @@ export const matchPassword = async (password: string, userPassword: string) => {
   try {
     return await bcrypt.compare(password, userPassword);
   } catch (err) {
-    throw new Error(err ? err.toString() : "Could not match passwords");
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.USER.MATCH_PASSWORD);
   }
 };
 
@@ -76,7 +58,7 @@ export const getUserById = async (userId: string | Types.ObjectId) => {
     const user = await User.findById(userId).populate("authorizationRequests");
     return user;
   } catch (err) {
-    throw new Error(err ? err.toString() : "Could not find user by id");
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.USER.NOT_FOUND);
   }
 };
 
@@ -91,11 +73,7 @@ export const getUserByOrMailUserNamePassword = async (
     });
     return user;
   } catch (err) {
-    throw new Error(
-      err
-        ? err.toString()
-        : "Could not find user by mail, username, and password"
-    );
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.USER.NOT_FOUND);
   }
 };
 
@@ -113,9 +91,7 @@ export const createAuthorizationRequest = async (
     await newRequest.save();
     return newRequest;
   } catch (err) {
-    throw new Error(
-      err ? err.toString() : "Could not create authorization request"
-    );
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.USER.CREATE_REQUEST);
   }
 };
 
@@ -124,6 +100,6 @@ export const getUserByEmail = async (email: string) => {
     const user = await User.findOne({ email });
     return user;
   } catch (err) {
-    throw new Error(err ? err.toString() : "Could not find user by email");
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.USER.NOT_ADMIN);
   }
 };

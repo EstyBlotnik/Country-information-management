@@ -1,53 +1,74 @@
 import React from "react";
-import { TextField, Button, Grid, Box, Typography } from "@mui/material";
+import { TextField, Button, Grid, Box } from "@mui/material";
 import { Formik, Field, Form, ErrorMessage, FieldProps } from "formik";
 import * as Yup from "yup";
 import { useUser } from "../../hooks/useUser";
 import "../../style/signupForm.scss";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import { INITIAL_USER } from "../../initial";
+import { USER, USER_MESSAGES } from "../../constats";
 
 const validationSchema = Yup.object({
   firstName: Yup.string()
-    .required("First Name is required")
-    .test("no-noSQL", "Invalid first name", (value) => {
-      return !/[{}$]/.test(value);
-    }),
+    .required(USER_MESSAGES.FIRST_NAME_REQUIRED)
+    .test(
+      USER_MESSAGES.NO_SQL_TEST,
+      USER_MESSAGES.FIRST_NAME_INVALID,
+      (value) => {
+        return !/[{}$]/.test(value);
+      }
+    ),
   lastName: Yup.string()
-    .required("Last Name is required")
-    .test("no-noSQL", "Invalid last name", (value) => {
-      return !/[{}$]/.test(value);
-    }),
+    .required(USER_MESSAGES.LAST_NAME_REQUIRED)
+    .test(
+      USER_MESSAGES.NO_SQL_TEST,
+      USER_MESSAGES.LAST_NAME_INVALID,
+      (value) => {
+        return !/[{}$]/.test(value);
+      }
+    ),
   email: Yup.string()
-    .email("Invalid email format")
-    .required("Email is required")
-    .test("no-noSQL", "Invalid email format", (value) => {
+    .email(USER_MESSAGES.EMAIL_INVALID)
+    .required(USER_MESSAGES.EMAIL_REQUIRED)
+    .test(USER_MESSAGES.NO_SQL_TEST, USER_MESSAGES.EMAIL_INVALID, (value) => {
       return !/[{}$]/.test(value);
     }),
   phoneNumber: Yup.string()
-    .matches(/^(\d{10})$/, "Phone number must be 10 digits")
-    .required("Phone number is required")
-    .test("no-noSQL", "Invalid phoneNumber", (value) => {
+    .matches(/^(\d{10})$/, USER_MESSAGES.PHONE_MIN_LENGTH)
+    .required(USER_MESSAGES.PHONE_REQUIRED)
+    .test(USER_MESSAGES.NO_SQL_TEST, USER_MESSAGES.PHONE_INVALID, (value) => {
       return !/[{}$]/.test(value);
     }),
   userName: Yup.string()
-    .required("Username is required")
-    .test("no-noSQL", "Invalid Username", (value) => {
-      return !/[{}$]/.test(value);
-    }),
+    .required(USER_MESSAGES.USERNAME_REQUIRED)
+    .test(
+      USER_MESSAGES.NO_SQL_TEST,
+      USER_MESSAGES.USERNAME_INVALID,
+      (value) => {
+        return !/[{}$]/.test(value);
+      }
+    ),
   password: Yup.string()
-    .min(8, "Password must be at least 8 characters")
-    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
-    .matches(/[0-9]/, "Password must contain at least one digit")
-    .matches(/[\W_]/, "Password must contain at least one special character")
-    .required("Password is required")
-    .test("no-noSQL", "Invalid Password", (value) => {
-      return !/[{}$]/.test(value);
-    }),
+    .min(8, USER_MESSAGES.PASSWORD_MIN_LENGTH)
+    .matches(/[A-Z]/, USER_MESSAGES.PASSWORD_UPPERCASE)
+    .matches(/[a-z]/, USER_MESSAGES.PASSWORD_LOWERCASE)
+    .matches(/[0-9]/, USER_MESSAGES.PASSWORD_DIGIT)
+    .matches(/[\W_]/, USER_MESSAGES.PASSWORD_SPECIAL)
+    .required(USER_MESSAGES.PASSWORD_REQUIRED)
+    .test(
+      USER_MESSAGES.NO_SQL_TEST,
+      USER_MESSAGES.PASSWORD_INVALID,
+      (value) => {
+        return !/[{}$]/.test(value);
+      }
+    ),
   confirmPassword: Yup.string()
     .nullable()
-    .oneOf([Yup.ref("password"), null], "Passwords must match")
-    .required("Confirm Password is required"),
+    .oneOf(
+      [Yup.ref("password"), null],
+      USER_MESSAGES.CONFIRM_PASSWORD_NOT_MATCH
+    )
+    .required(USER_MESSAGES.CONFIRM_PASSWORD_REQUIRED),
   profilePicture: Yup.mixed().nullable(),
 });
 
@@ -61,42 +82,27 @@ const SignupForm = () => {
   ) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFieldValue("profilePicture", file);
+      setFieldValue(USER.PROFILE_PICTURE, file);
     }
   };
 
   // Processes form data and submits it.
   const handleSubmit = async (values: any) => {
     const formData = new FormData();
-
+    console.log(values);
     Object.entries(values).forEach(([key, value]) => {
-      if (key === "profilePicture" && value instanceof File) {
+      if (key === USER.PROFILE_PICTURE && value instanceof File) {
         formData.append(key, value);
       } else {
         formData.append(key, value as string);
       }
     });
-
-    console.log("FormData being sent:");
-    for (let pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-    console.log("formData: " + formData);
     registerUser(formData as any);
   };
 
   return (
     <Formik
-      initialValues={{
-        firstName: "",
-        lastName: "",
-        email: "",
-        phoneNumber: "",
-        profilePicture: null,
-        userName: "",
-        password: "",
-        confirmPassword: "",
-      }}
+      initialValues={INITIAL_USER}
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
@@ -117,11 +123,11 @@ const SignupForm = () => {
 
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                <Field name="firstName">
+                <Field name={USER.FIRST_NAME}>
                   {({ field, meta }: FieldProps) => (
                     <TextField
                       {...field}
-                      label="First Name"
+                      label={USER.FIRST_NAME_LABEL}
                       fullWidth
                       variant="outlined"
                       error={meta.touched && Boolean(meta.error)}
@@ -132,11 +138,11 @@ const SignupForm = () => {
               </Grid>
 
               <Grid item xs={12} md={6}>
-                <Field name="lastName">
+                <Field name={USER.LAST_NAME}>
                   {({ field, meta }: FieldProps) => (
                     <TextField
                       {...field}
-                      label="Last Name"
+                      label={USER.LAST_NAME_LABEL}
                       fullWidth
                       variant="outlined"
                       error={meta.touched && Boolean(meta.error)}
@@ -147,11 +153,11 @@ const SignupForm = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Field name="email">
+                <Field name={USER.EMAIL}>
                   {({ field, meta }: FieldProps) => (
                     <TextField
                       {...field}
-                      label="Email Address"
+                      label={USER.EMAIL_LABEL}
                       fullWidth
                       variant="outlined"
                       error={meta.touched && Boolean(meta.error)}
@@ -162,11 +168,11 @@ const SignupForm = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Field name="phoneNumber">
+                <Field name={USER.PHONE_NUMBER}>
                   {({ field, meta }: FieldProps) => (
                     <TextField
                       {...field}
-                      label="Phone Number"
+                      label={USER.PHONE_NUMBER_LABEL}
                       fullWidth
                       variant="outlined"
                       error={meta.touched && Boolean(meta.error)}
@@ -177,11 +183,11 @@ const SignupForm = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Field name="userName">
+                <Field name={USER.USER_NAME}>
                   {({ field, meta }: FieldProps) => (
                     <TextField
                       {...field}
-                      label="User Name"
+                      label={USER.USER_NAME_LABEL}
                       fullWidth
                       variant="outlined"
                       error={meta.touched && Boolean(meta.error)}
@@ -192,11 +198,11 @@ const SignupForm = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Field name="password">
+                <Field name={USER.PASSWORD}>
                   {({ field, meta }: FieldProps) => (
                     <TextField
                       {...field}
-                      label="Password"
+                      label={USER.PASSWORD_LABEL}
                       type="password"
                       fullWidth
                       variant="outlined"
@@ -207,11 +213,11 @@ const SignupForm = () => {
                 </Field>
               </Grid>
               <Grid item xs={12}>
-                <Field name="confirmPassword">
+                <Field name={USER.CONFIRM_PASSWORD}>
                   {({ field, meta }: FieldProps) => (
                     <TextField
                       {...field}
-                      label="confirm Password"
+                      label={USER.CONFIRM_PASSWORD_LABEL}
                       type="password"
                       fullWidth
                       variant="outlined"
@@ -233,7 +239,7 @@ const SignupForm = () => {
                     textAlign: "center",
                   }}
                 >
-                  upload profil image
+                  {USER.PROFILE_PICTURE_LABEL}
                   <input
                     type="file"
                     accept="image/*"
@@ -242,7 +248,7 @@ const SignupForm = () => {
                   />
                 </Button>
                 <ErrorMessage
-                  name="profilePicture"
+                  name={USER.PROFILE_PICTURE}
                   component="div"
                   className="error-message"
                 />

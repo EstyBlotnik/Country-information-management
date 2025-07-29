@@ -5,10 +5,11 @@ import {
   changeRoleResponse,
 } from "../services/userService";
 import { RequestData } from "../types/authorizationRequest";
+import { useUser } from "./useUser";
 
 export const usePermissionRequests = () => {
   const queryClient = useQueryClient();
-
+  const { user } = useUser();
   // Fetch reqests
   const {
     data: permissionRequests,
@@ -17,6 +18,10 @@ export const usePermissionRequests = () => {
   } = useQuery<RequestData[], Error>({
     queryKey: ["permissionRequests"],
     queryFn: async () => {
+      if (user?.role !== "Admin") {
+        console.log("Access denied: user is not an Admin.");
+        return []; //no admin
+      }
       console.log("permissionRequests query");
       const response = await fetchPermissionRequestsFromServer();
       console.log("response at query: ", response);
@@ -32,7 +37,7 @@ export const usePermissionRequests = () => {
     mutationFn: async ({ reqId, approved }) => {
       const response = await changeRoleResponse(reqId, approved);
       if (response && "data" in response) {
-        console.log("not error: ",response.data);
+        console.log("not error: ", response.data);
         return response.data as RequestData;
       } else {
         console.log("error");

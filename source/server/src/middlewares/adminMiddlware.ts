@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import { STATUS_CODES, ERRORS_MESSAGES } from "../constants";
 
 dotenv.config();
 
@@ -19,7 +20,7 @@ export const verifyToken = (token: string) => {
     };
   } catch (error) {
     // Throw an error if token verification fails
-    throw new Error("Invalid token.");
+    throw new Error(ERRORS_MESSAGES.ACCESS.INVALID_TOKEN);
   }
 };
 
@@ -32,7 +33,9 @@ export const adminMiddleware = (
   try {
     const token = req.cookies.token;
     if (!token) {
-      res.status(401).json({ message: "Access denied. No token provided." });
+      res
+        .status(STATUS_CODES.UNAUTHORIZED)
+        .json({ message: ERRORS_MESSAGES.ACCESS.NO_TOKEN });
       return;
     } else {
       const decoded = verifyToken(token);
@@ -40,12 +43,12 @@ export const adminMiddleware = (
 
       // Check if the decoded user role is 'Admin'
       if (req.user.role !== "Admin" || req.user.role === undefined) {
-        res.status(403).json({ message: "Access denied. Admins only." });
+        res.status(STATUS_CODES.FORBIDDEN).json({ message: ERRORS_MESSAGES.ACCESS.ADMIN_ONLY });
         return;
       }
     }
   } catch (error) {
-    res.status(400).json({ message: "Invalid token." });
+    res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.ACCESS.INVALID_TOKEN });
     return;
   }
   next();
@@ -60,7 +63,9 @@ export const checkUserOrAdminAccess = (
   try {
     const token = req.cookies.token;
     if (!token) {
-      res.status(401).json({ message: "Access denied. No token provided." });
+      res
+        .status(STATUS_CODES.UNAUTHORIZED)
+        .json({ message: ERRORS_MESSAGES.ACCESS.NO_TOKEN });
       return;
     } else {
       const { id } = req.params;
@@ -70,12 +75,12 @@ export const checkUserOrAdminAccess = (
 
       // Check if the user is either an admin or the user themselves
       if (req.user.role !== "Admin" && req.user.id !== id) {
-        res.status(403).json({ message: "Access denied. Admins only." });
+        res.status(STATUS_CODES.FORBIDDEN).json({ message: ERRORS_MESSAGES.ACCESS.ADMIN_ONLY });
         return;
       }
     }
   } catch (error) {
-    res.status(400).json({ message: "Invalid token." });
+    res.status(STATUS_CODES.BAD_REQUEST).json({ message: ERRORS_MESSAGES.ACCESS.INVALID_TOKEN });
     return;
   }
   next();

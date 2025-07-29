@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit"; // Importing express-rate-limit to limit request rates
 import NodeCache from "node-cache"; // Importing NodeCache for caching login attempts
+import { ERRORS_MESSAGES } from "../constants";
 
 // Setting up the rate limiter for login attempts
 export const loginLimiter = rateLimit({
   windowMs: 2 * 60 * 1000,
   max: 5,
-  message: "Too many login attempts. Try again in 2 minutes.",
+  message: ERRORS_MESSAGES.LOGIN_LIMIT,
   headers: true,
 });
 

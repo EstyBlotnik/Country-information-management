@@ -1,18 +1,20 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 import { IUser } from "../types/user";
+import { RoleEnum } from '../enums/roleEnum';
+import { ERRORS_MESSAGES } from './../../constants';
 
 const userSchema = new Schema<IUser>({
   firstName: {
     type: String,
     required: true,
-    minlength: [2, "firstName must contain at least 2 characters."],
-    maxlength: [50, "firstName can contain up to 50 characters."],
+    minlength: [2, ERRORS_MESSAGES.USER.MIN_LEN],
+    maxlength: [50, ERRORS_MESSAGES.USER.MAX_LEN],
   },
   lastName: {
     type: String,
     required: true,
-    minlength: [2, "lastName must contain at least 2 characters."],
-    maxlength: [50, "lastName can contain up to 50 characters."],
+    minlength: [2, ERRORS_MESSAGES.USER.MIN_LEN],
+    maxlength: [50, ERRORS_MESSAGES.USER.MAX_LEN],
   },
   email: {
     type: String,
@@ -33,14 +35,14 @@ const userSchema = new Schema<IUser>({
   role: {
     type: String,
     required: true,
-    enum: ["View", "Edit", "Add", "Delete", "Admin"],
+    enum: Object.values(RoleEnum)
   },
   userName: {
     type: String,
     required: true,
     unique: true,
-    minlength: [2, "userName must contain at least 2 characters."],
-    maxlength: [50, "userName can contain up to 50 characters."],
+    minlength: [2, ERRORS_MESSAGES.USER.MIN_LEN],
+    maxlength: [50, ERRORS_MESSAGES.USER.MAX_LEN],
   },
   password: { type: String, required: true, minlength: 2, maxlength: 100 },
   JoiningDate: { type: Date, default: () => new Date() },

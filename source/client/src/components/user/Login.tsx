@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { useUser } from "../../hooks/useUser";
 import "../../style/LoginPage.scss";
 import { Link } from "react-router-dom";
-import { Typography } from "@mui/material";
 
 const LoginPage = () => {
   const { loginUser, loginMutation } = useUser();

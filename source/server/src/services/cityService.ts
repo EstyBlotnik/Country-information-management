@@ -1,3 +1,4 @@
+import { ERRORS_MESSAGES } from "../constants";
 import City from "../db/models/city";
 import Country from "../db/models/country";
 
@@ -5,12 +6,12 @@ export const createCityAtCountry = async (name: string, countryId: string) => {
   try {
     const country = await Country.findById(countryId);
     if (!country) {
-      throw new Error("Country not found");
+      throw new Error(ERRORS_MESSAGES.COUNTRY.NOT_FOUND);
     }
     const existingCity = await City.findOne({ name: name });
     if (existingCity) {
       if (country.cities.includes(existingCity._id)) {
-        throw new Error("City already exists");
+        throw new Error(ERRORS_MESSAGES.CITY.ALREADY_EXISTS);
       }
       country.cities.push(existingCity._id);
       await country.save();
@@ -22,7 +23,7 @@ export const createCityAtCountry = async (name: string, countryId: string) => {
     await country.save();
     return newCity;
   } catch (err) {
-    throw new Error(err ? err.toString() : "Could not add new city");
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.CITY.ERROR_ADD);
   }
 };
 
@@ -31,7 +32,7 @@ export const deleteCityFromDb = async (id: string) => {
     const deletedCity = await City.findByIdAndDelete(id);
     return deletedCity;
   } catch (err) {
-    throw new Error(err ? err.toString() : "Could not delete city");
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.CITY.ERROR_DELETE);
   }
 };
 
@@ -46,12 +47,12 @@ export const deleteCityFromCountry = async (
       { new: true }
     );
     if (!country) {
-      throw new Error("Country not found");
+      throw new Error(ERRORS_MESSAGES.COUNTRY.NOT_FOUND);
     }
     return country;
   } catch (err) {
     throw new Error(
-      err ? err.toString() : "Could not delete city from country"
+      err ? err.toString() : ERRORS_MESSAGES.CITY.ERROR_DELETE_FROM_COUNTRY
     );
   }
 };
@@ -61,28 +62,28 @@ export const getCities = async () => {
     const cities = await City.find();
     return cities;
   } catch (err) {
-    throw new Error(err ? err.toString() : "Could not retrieve cities");
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.CITY.NOT_FOUND);
   }
 };
 
 export const getCityByItsId = async (cityId: string) => {
-    try {
-      const city = await City.findById(cityId);
-      return city;
-    } catch (err) {
-      throw new Error(err? err.toString() : "Could not retrieve city");
-    }
+  try {
+    const city = await City.findById(cityId);
+    return city;
+  } catch (err) {
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.CITY.NOT_FOUND);
+  }
 };
 
 export const updateCityName = async (cityId: string, newName: string) => {
-    try {
-      const updatedCity = await City.findByIdAndUpdate(
-        cityId,
-        { name: newName },
-        { new: true }
-      );
-      return updatedCity;
-    } catch (err) {
-      throw new Error(err ? err.toString() : "Could not update city name");
-    }
+  try {
+    const updatedCity = await City.findByIdAndUpdate(
+      cityId,
+      { name: newName },
+      { new: true }
+    );
+    return updatedCity;
+  } catch (err) {
+    throw new Error(err ? err.toString() : ERRORS_MESSAGES.CITY.ERROR_UPDATE);
+  }
 };

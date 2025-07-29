@@ -1,15 +1,15 @@
+import { ERRORS_MESSAGES } from "../constants";
 import Country from "../db/models/country";
 
 export const getCountryByIdService = async (countryId: string | undefined) => {
   try {
     const country = await Country.findById(countryId).populate("cities");
-    if (!country) {
-      throw new Error("Country not found");
-    }
+    console.log(countryId);
+    console.log("county by id: " + country);
     return country;
   } catch (error) {
     console.error(error);
-    throw new Error("An error occurred while fetching the country");
+    throw new Error(ERRORS_MESSAGES.COUNTRY.FAILD_FETCH_COUNTRY);
   }
 };
 
@@ -18,19 +18,20 @@ export const getAllCountriesService = async () => {
     const countries = await Country.find().populate("cities");
     return countries;
   } catch (error) {
-    throw new Error("Failed to fetch countries");
+    throw new Error(ERRORS_MESSAGES.COUNTRY.FAILD_FETCH_COUNTRIES);
   }
 };
 
 export const getCountryByName = async (countryName: string) => {
   try {
+    // const countries = await Country.find();
+    // console.log(countries);
+    console.log("countryName: " + countryName);
     const country = await Country.findOne({ name: countryName });
-    if (!country) {
-      throw new Error("Country not found");
-    }
+    console.log("country: ", country);
     return country;
   } catch (error) {
-    throw new Error("An error occurred while fetching the country");
+    throw new Error(ERRORS_MESSAGES.COUNTRY.FAILD_FETCH_COUNTRY);
   }
 };
 
@@ -48,12 +49,12 @@ export const updateCountryById = async (
       { new: true }
     );
     if (!updatedCountry) {
-      throw new Error("Country not found");
+      throw new Error(ERRORS_MESSAGES.COUNTRY.NOT_FOUND);
     }
     return updatedCountry;
   } catch (error) {
     console.error(error);
-    throw new Error("An error occurred while updating the country");
+    throw new Error(ERRORS_MESSAGES.COUNTRY.ERROR_UPDATE);
   }
 };
 
@@ -69,19 +70,16 @@ export const createCountryService = async (
     return newCountry;
   } catch (error) {
     console.error(error);
-    throw new Error("An error occurred while creating the country");
+    throw new Error(ERRORS_MESSAGES.COUNTRY.ERROR_CREATE);
   }
 };
 
-export const deleteCountryById = async (id:string) => {
-    try {
+export const deleteCountryById = async (id: string) => {
+  try {
     const deletedCountry = await Country.findByIdAndDelete(id);
-    if (!deletedCountry) {
-      throw new Error("Country not found");
-    }
     return deletedCountry;
   } catch (error) {
     console.error(error);
-    throw new Error("An error occurred while deleting the country");
+    throw new Error(ERRORS_MESSAGES.COUNTRY.ERROR_DELETE);
   }
-}
+};

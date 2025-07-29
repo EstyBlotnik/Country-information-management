@@ -9,21 +9,22 @@ import useAdminAuth from "../../hooks/permissions/useAdmin";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import AddUserForm from "./AddUserForm";
 import { UsersPage } from "./UsersPage";
+import { NAVIGAT } from "../../constats";
 
 const NAVIGATION: Navigation = [
   {
-    segment: "allUsers",
-    title: "All users",
+    segment: NAVIGAT.ALL_USERS,
+    title: NAVIGAT.ALL_USERS_TITLE,
     icon: <PeopleAltIcon />,
   },
   {
-    segment: "addUser",
-    title: "Add user",
+    segment: NAVIGAT.ADD_USER,
+    title: NAVIGAT.ADD_USER_TITLE,
     icon: <PersonAddIcon />,
   },
   {
-    segment: "permissionRequests",
-    title: "Permission requests",
+    segment: NAVIGAT.PERMISSION_REQUESTS,
+    title: NAVIGAT.PERMISSION_REQUESTS_TITLE,
     icon: <MailLockIcon />,
   },
 ];
@@ -49,7 +50,10 @@ interface DemoProps {
   initialPath?: string;
 }
 
-export default function AdminPage({ window, initialPath = "/allUsers" }: DemoProps) {
+export default function AdminPage({
+  window,
+  initialPath = `/${NAVIGAT.ALL_USERS}`,
+}: DemoProps) {
   useAdminAuth();
 
   const router = useDemoRouter(initialPath);
@@ -75,14 +79,14 @@ export default function AdminPage({ window, initialPath = "/allUsers" }: DemoPro
         window={demoWindow}
         branding={{
           title: "Admin actions",
-          homeUrl: "/allUsers",
+          homeUrl:`/${NAVIGAT.ALL_USERS}`,
           logo: "",
         }}
       >
         <DashboardLayout disableCollapsibleSidebar>
-          {router.pathname === "/allUsers" && <UsersPage />}
-          {router.pathname === "/permissionRequests" && <PermissionRequests />}
-          {router.pathname === "/addUser" && <AddUserForm />}
+          {router.pathname === `/${NAVIGAT.ALL_USERS}` && <UsersPage />}
+          {router.pathname === `/${NAVIGAT.PERMISSION_REQUESTS}` && <PermissionRequests />}
+          {router.pathname === `/${NAVIGAT.ADD_USER}` && <AddUserForm />}
         </DashboardLayout>
       </AppProvider>
     </div>

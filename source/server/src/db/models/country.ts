@@ -1,13 +1,14 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 import { ICountry } from "../types/country";
+import { ERRORS_MESSAGES } from "../../constants";
 
 const countrySchema = new Schema<ICountry>({
   name: {
     type: String,
     required: true,
     unique: true,
-    minlength: [2, "Country name must contain at least 2 characters."],
-    maxlength: [50, "Country name can contain up to 50 characters."],
+    minlength: [2, ERRORS_MESSAGES.COUNTRY.MIN_LEN],
+    maxlength: [50, ERRORS_MESSAGES.COUNTRY.MAX_LEN],
   },
   flag: { type: String, required: true, minlength: 2, maxlength: 50 },
   population: {
@@ -18,8 +19,8 @@ const countrySchema = new Schema<ICountry>({
   region: {
     type: String,
     required: true,
-    minlength: [2, "region must contain at least 2 characters."],
-    maxlength: [50, "region name can contain up to 50 characters."],
+    minlength: [2, ERRORS_MESSAGES.GENERAL.MIN_LEN_REG],
+    maxlength: [50, ERRORS_MESSAGES.GENERAL.MAX_LEN_REG],
   },
   cities: [{ type: Types.ObjectId, ref: "City" }],
 });

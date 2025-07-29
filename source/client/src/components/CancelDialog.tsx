@@ -1,4 +1,3 @@
-// DeleteDialog.tsx
 import {
   Dialog,
   DialogActions,

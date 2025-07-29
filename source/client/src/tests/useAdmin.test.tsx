@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BrowserRouter as Router } from "react-router-dom";
 import useAdminAuth from "../hooks/permissions/useAdmin";

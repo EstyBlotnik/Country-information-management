@@ -7,10 +7,11 @@ import {
   addUser,
 } from "../services/userService";
 import { userData } from "../types/userTypes";
+import { useUser } from "./useUser";
 
 export const useUsers = () => {
   const queryClient = useQueryClient();
-
+  const {user} = useUser();
   // Fetch users
   const {
     data: users,
@@ -19,6 +20,10 @@ export const useUsers = () => {
   } = useQuery<userData[], Error>({
     queryKey: ["users"],
     queryFn: async () => {
+      if (user?.role !== "Admin") {
+        console.log("Access denied: user is not an Admin.");
+        return []; //no admin
+      }
       const response = await getAllUsers();
       if (response && "data" in response) {
         return response.data as userData[];
